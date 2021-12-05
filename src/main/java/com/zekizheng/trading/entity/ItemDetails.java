@@ -23,6 +23,7 @@ import java.util.List;
 public class ItemDetails implements Serializable {
     @TableId(type = IdType.AUTO)
     private Integer itemId;
+    private String sellerId;
     private String itemTitle;
     private Integer itemPrice;
     @TableField(typeHandler = GsonTypeHandler.class)
