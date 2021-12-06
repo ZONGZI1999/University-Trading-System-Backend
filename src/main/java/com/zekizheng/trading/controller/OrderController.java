@@ -12,6 +12,7 @@ import com.zekizheng.trading.status.ItemDetailsStatus;
 import com.zekizheng.trading.status.OrderStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
@@ -324,6 +325,21 @@ public class OrderController {
         resp.setMessage(ResponseCode.SUCCESS);
         resp.setData(orderDetails);
 
+        return resp;
+    }
+
+    @GetMapping("/queryOrderByItemId")
+    public HttpBaseResponse<OrderDetails> queryOrderDetailsByItemId(@RequestParam String itemId){
+        //todo 鉴权
+        HttpBaseResponse<OrderDetails> resp = new HttpBaseResponse<>();
+        OrderDetails orderDetails = orderService.queryDetailsByItemId(itemId);
+        if(orderDetails == null) {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("Item Id is not correct");
+            return resp;
+        }
+        resp.setMessage(ResponseCode.SUCCESS);
+        resp.setData(orderDetails);
         return resp;
     }
 }

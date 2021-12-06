@@ -3,6 +3,7 @@ package com.zekizheng.trading.controller;
 import com.zekizheng.trading.dto.HttpBaseResponse;
 import com.zekizheng.trading.dto.ResponseCode;
 import com.zekizheng.trading.entity.ItemDetails;
+import com.zekizheng.trading.entity.OrderDetails;
 import com.zekizheng.trading.entity.UserType;
 import com.zekizheng.trading.mapper.ItemDetailsMapper;
 import com.zekizheng.trading.mapper.StudentMapper;

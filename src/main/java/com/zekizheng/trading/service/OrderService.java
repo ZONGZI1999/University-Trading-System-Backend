@@ -16,4 +16,7 @@ public interface OrderService {
     List<OrderDetails> queryAllOrderAsBuyer(String studentId);
     List<OrderDetails> queryAllOrder(String studentId);
     OrderDetails queryDetails(String orderId);
+
+    OrderDetails queryDetailsByItemId(String itemId);
+
 }

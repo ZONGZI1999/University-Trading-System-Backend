@@ -156,4 +156,12 @@ public class OrderServiceImpl implements OrderService {
         log.info("query result: " + orderDetails);
         return orderDetails;
     }
+
+    @Override
+    public OrderDetails queryDetailsByItemId(String itemId) {
+        QueryWrapper<OrderDetails> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("item_id", itemId);
+        OrderDetails orderDetails = orderMapper.selectList(queryWrapper).get(0);
+        return orderDetails;
+    }
 }
