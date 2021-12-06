@@ -141,12 +141,12 @@ public class OrderController {
         return resp;
     }
 
-    @PostMapping("/setDelivery")
+    @PostMapping({"/setDelivery", "/onConfirm", "/giveEvaluation"})
     public HttpBaseResponse<OrderDetails> setDeliveryInfo(@RequestBody OrderDetails orderDetails) {
         HttpBaseResponse<OrderDetails> resp = new HttpBaseResponse<>();
         resp.setMessage(ResponseCode.UNKNOWN_ERROR);
 
-        String userId = "SWE1809388";
+        String userId = "SWE1809387";
         if(orderDetails == null ||
                 orderDetails.getOrderId() == null ||
                 orderDetails.getOrderId().isEmpty()) {
@@ -158,18 +158,8 @@ public class OrderController {
         Date deliveryTime = new Date();
         String deliveryCompany = orderDetails.getDeliveryCompany();
         String trackingNo = orderDetails.getTrackingNo();
-
-        if(deliveryCompany == null || deliveryCompany.isEmpty()) {
-            resp.setMessage(ResponseCode.PARAM_ERROR);
-            resp.setDescription("Delivery Company is empty!");
-            return resp;
-        }
-
-        if(trackingNo == null || trackingNo.isEmpty()) {
-            resp.setMessage(ResponseCode.PARAM_ERROR);
-            resp.setDescription("Tracking No is empty!");
-            return resp;
-        }
+        String sellerEvaluation = orderDetails.getSellerEvaluation();
+        String buyerEvaluation = orderDetails.getBuyerEvaluation();
 
         orderDetails = orderService.queryDetails(orderDetails.getOrderId());
 
@@ -178,36 +168,107 @@ public class OrderController {
             resp.setDescription("Order details is not found!");
             return resp;
         }
+        int row;
+        switch (orderDetails.getOrderStatus()) {
+            case PAID:
+                if(!orderDetails.getSellerId().equals(userId)) {
+                    resp.setMessage(ResponseCode.UNKNOWN_ERROR);
+                    resp.setDescription("You cannot to set delivery info.");
+                    return resp;
+                }
+                if(deliveryCompany == null || deliveryCompany.isEmpty()) {
+                    resp.setMessage(ResponseCode.PARAM_ERROR);
+                    resp.setDescription("Delivery Company is empty!");
+                    return resp;
+                }
 
-        if(!orderDetails.getSellerId().equals(userId)) {
-            resp.setMessage(ResponseCode.UNKNOWN_ERROR);
-            resp.setDescription("You cannot to set delivery info.");
-            return resp;
+                if(trackingNo == null || trackingNo.isEmpty()) {
+                    resp.setMessage(ResponseCode.PARAM_ERROR);
+                    resp.setDescription("Tracking No is empty!");
+                    return resp;
+                }
+                orderDetails.setDeliveryTime(deliveryTime);
+                orderDetails.setTrackingNo(trackingNo);
+                orderDetails.setDeliveryCompany(deliveryCompany);
+                orderDetails.setOrderStatus(OrderStatus.ON_DELIVERY);
+
+                row = orderService.updateOrder(orderDetails);
+
+                if(row != 1) {
+                    resp.setMessage(ResponseCode.DATABASE_ERROR);
+                } else {
+                    resp.setMessage(ResponseCode.SUCCESS);
+                    resp.setData(orderDetails);
+                }
+                return resp;
+            case ON_DELIVERY:
+                if(!orderDetails.getBuyerId().equals(userId)) {
+                    resp.setMessage(ResponseCode.UNKNOWN_ERROR);
+                    resp.setDescription("You cannot to confirm this order!");
+                    return resp;
+                }
+                orderDetails.setOrderStatus(OrderStatus.ON_RECEIVED);
+
+                row = orderService.updateOrder(orderDetails);
+
+                if(row != 1) {
+                    resp.setMessage(ResponseCode.DATABASE_ERROR);
+                } else {
+                    resp.setMessage(ResponseCode.SUCCESS);
+                    resp.setData(orderDetails);
+                }
+                return resp;
+            case ON_RECEIVED:
+                //try to set buyer evaluation
+                if(orderDetails.getBuyerId().equals(userId)) {
+                    if (orderDetails.getBuyerEvaluation() != null) {
+                        resp.setMessage(ResponseCode.PARAM_ERROR);
+                        resp.setDescription("You has given evaluation");
+                        return resp;
+                    } else {
+                        if(buyerEvaluation == null){
+                            resp.setMessage(ResponseCode.PARAM_ERROR);
+                            resp.setDescription("your evaluation is empty");
+                            return resp;
+                        }
+                        orderDetails.setBuyerEvaluation(buyerEvaluation);
+                    }
+                } else if(orderDetails.getSellerId().equals(userId)) {
+                    if (orderDetails.getSellerEvaluation() != null) {
+                        resp.setMessage(ResponseCode.PARAM_ERROR);
+                        resp.setDescription("You has given evaluation");
+                        return resp;
+                    } else {
+                        if(sellerEvaluation == null) {
+                            resp.setMessage(ResponseCode.PARAM_ERROR);
+                            resp.setDescription("your evaluation is empty");
+                            return resp;
+                        }
+                        orderDetails.setSellerEvaluation(sellerEvaluation);
+                    }
+                }
+                row = orderService.updateOrder(orderDetails);
+                if (row != 1) {
+                    resp.setMessage(ResponseCode.DATABASE_ERROR);
+                    return resp;
+                }
+                if(orderDetails.getBuyerEvaluation() != null && orderDetails.getSellerEvaluation() != null) {
+                    orderDetails.setOrderStatus(OrderStatus.FINISH);
+                }
+                row = orderService.updateOrder(orderDetails);
+                if (row != 1) {
+                    resp.setMessage(ResponseCode.DATABASE_ERROR);
+                    return resp;
+                }
+                resp.setMessage(ResponseCode.SUCCESS);
+                return resp;
+            default:
+                resp.setMessage(ResponseCode.UNKNOWN_ERROR);
+                resp.setDescription("In this status, you cannot operate it.");
+                return resp;
         }
-
-        if (!orderDetails.getOrderStatus().equals(OrderStatus.PAID)) {
-            resp.setMessage(ResponseCode.UNKNOWN_ERROR);
-            resp.setDescription("This order status is not correct!");
-            return resp;
-        }
-
-        orderDetails.setDeliveryTime(deliveryTime);
-        orderDetails.setTrackingNo(trackingNo);
-        orderDetails.setDeliveryCompany(deliveryCompany);
-        orderDetails.setOrderStatus(OrderStatus.ON_DELIVERY);
-
-        int row = orderService.updateOrder(orderDetails);
-
-        if(row != 1) {
-            resp.setMessage(ResponseCode.DATABASE_ERROR);
-            return resp;
-        } else {
-            resp.setMessage(ResponseCode.SUCCESS);
-            resp.setData(orderDetails);
-        }
-
-        return resp;
     }
+
 
     @GetMapping("/queryOrder")
     public HttpBaseResponse<OrderDetails> queryOrderDetails(@RequestParam String orderId) {
