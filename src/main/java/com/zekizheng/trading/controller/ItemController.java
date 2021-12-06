@@ -62,7 +62,7 @@ public class ItemController {
                 resp.setMessage(ResponseCode.SUCCESS);
                 break;
             case STUDENT:
-                String studentId = "SWE1809388";
+                String studentId = "SWE1809387";
                 itemDetails = itemService.getAllItems(studentId);
                 resp.setData(itemDetails);
                 resp.setMessage(ResponseCode.SUCCESS);

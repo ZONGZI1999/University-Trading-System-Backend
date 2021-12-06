@@ -140,6 +140,16 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public List<OrderDetails> queryAllOrder(String studentId) {
+        log.info("start to query all order");
+        List<OrderDetails> res;
+        QueryWrapper<OrderDetails> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("buyer_id", studentId).or().eq("seller_id", studentId);
+        res = orderMapper.selectList(queryWrapper);
+        return res;
+    }
+
+    @Override
     public OrderDetails queryDetails(String orderId) {
         log.info("start to query order details");
         OrderDetails orderDetails = orderMapper.selectById(orderId);

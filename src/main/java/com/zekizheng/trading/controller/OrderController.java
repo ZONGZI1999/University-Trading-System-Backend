@@ -273,6 +273,7 @@ public class OrderController {
     @GetMapping("/queryOrderList/{as}")
     public HttpBaseResponse<List<OrderDetails>> queryOrderList(@PathVariable String as,
                                                                @RequestParam String studentId) {
+        //todo: 鉴权
         HttpBaseResponse<List<OrderDetails>> resp = new HttpBaseResponse<>();
         if (studentId == null) {
             resp.setMessage(ResponseCode.PARAM_ERROR);
@@ -286,6 +287,11 @@ public class OrderController {
             return resp;
         } else if (as.equals("seller")) {
             List<OrderDetails> res = orderService.queryAllOrderAsSeller(studentId);
+            resp.setMessage(ResponseCode.SUCCESS);
+            resp.setData(res);
+            return resp;
+        } else if (as.equals("all")){
+            List<OrderDetails> res = orderService.queryAllOrder(studentId);
             resp.setMessage(ResponseCode.SUCCESS);
             resp.setData(res);
             return resp;
