@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author zongzi
@@ -269,6 +270,31 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/queryOrderList/{as}")
+    public HttpBaseResponse<List<OrderDetails>> queryOrderList(@PathVariable String as,
+                                                               @RequestParam String studentId) {
+        HttpBaseResponse<List<OrderDetails>> resp = new HttpBaseResponse<>();
+        if (studentId == null) {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("student id is empty");
+            return resp;
+        }
+        if (as.equals("buyer")) {
+            List<OrderDetails> res = orderService.queryAllOrderAsBuyer(studentId);
+            resp.setMessage(ResponseCode.SUCCESS);
+            resp.setData(res);
+            return resp;
+        } else if (as.equals("seller")) {
+            List<OrderDetails> res = orderService.queryAllOrderAsSeller(studentId);
+            resp.setMessage(ResponseCode.SUCCESS);
+            resp.setData(res);
+            return resp;
+        } else {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("param error");
+            return resp;
+        }
+    }
 
     @GetMapping("/queryOrder")
     public HttpBaseResponse<OrderDetails> queryOrderDetails(@RequestParam String orderId) {

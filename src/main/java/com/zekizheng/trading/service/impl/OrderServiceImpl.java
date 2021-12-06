@@ -1,5 +1,6 @@
 package com.zekizheng.trading.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.zekizheng.trading.entity.ItemDetails;
 import com.zekizheng.trading.entity.OrderDetails;
 import com.zekizheng.trading.entity.UserBalance;
@@ -119,8 +120,23 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<OrderDetails> queryAllOrder(String studentId) {
-        return null;
+    public List<OrderDetails> queryAllOrderAsSeller(String studentId) {
+        log.info("start to query all order as seller");
+        List<OrderDetails> res;
+        QueryWrapper<OrderDetails> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("seller_id", studentId);
+        res = orderMapper.selectList(queryWrapper);
+        return res;
+    }
+
+    @Override
+    public List<OrderDetails> queryAllOrderAsBuyer(String studentId) {
+        log.info("start to query all order as buyer");
+        List<OrderDetails> res;
+        QueryWrapper<OrderDetails> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("buyer_id", studentId);
+        res = orderMapper.selectList(queryWrapper);
+        return res;
     }
 
     @Override

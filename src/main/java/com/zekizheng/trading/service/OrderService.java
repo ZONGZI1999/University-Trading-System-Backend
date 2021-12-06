@@ -12,6 +12,7 @@ public interface OrderService {
     int payOrder(OrderDetails orderDetails);
     int updateOrder(OrderDetails orderDetails);
 
-    List<OrderDetails> queryAllOrder(String studentId);
+    List<OrderDetails> queryAllOrderAsSeller(String studentId);
+    List<OrderDetails> queryAllOrderAsBuyer(String studentId);
     OrderDetails queryDetails(String orderId);
 }
