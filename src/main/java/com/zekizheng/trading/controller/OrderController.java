@@ -179,7 +179,7 @@ public class OrderController {
             return resp;
         }
 
-        if(!orderDetails.getBuyerId().equals(userId)) {
+        if(!orderDetails.getSellerId().equals(userId)) {
             resp.setMessage(ResponseCode.UNKNOWN_ERROR);
             resp.setDescription("You cannot to set delivery info.");
             return resp;
