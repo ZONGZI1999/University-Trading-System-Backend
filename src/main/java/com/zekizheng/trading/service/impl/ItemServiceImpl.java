@@ -4,9 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.zekizheng.trading.entity.ItemDetails;
 import com.zekizheng.trading.mapper.ItemDetailsMapper;
 import com.zekizheng.trading.service.ItemService;
+import com.zekizheng.trading.status.ItemDetailsStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,6 +18,7 @@ import java.util.List;
  **/
 @Service
 @Slf4j
+@Transactional(isolation = Isolation.SERIALIZABLE)
 public class ItemServiceImpl implements ItemService {
 
     @Autowired
@@ -23,6 +27,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public int postNewItem(ItemDetails itemDetails) {
         log.info("post new item");
+        itemDetails.setItemStatus(ItemDetailsStatus.ON_SELL);
         int row = mapper.insert(itemDetails);
         log.info("successful insert into db.");
         log.debug("db: " + itemDetails);

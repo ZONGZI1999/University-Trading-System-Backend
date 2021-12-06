@@ -16,7 +16,7 @@ public enum OrderStatus {
 
     private final int key;
 
-    private OrderStatus(int key) {
+    OrderStatus(int key) {
         this.key = key;
     }
 

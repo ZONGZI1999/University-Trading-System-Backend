@@ -6,6 +6,7 @@ package com.zekizheng.trading.dto;
 public enum ResponseCode {
     SUCCESS(0, "success"),
     USER_TYPE_ERROR(101, "user type error"),
+    PARAM_ERROR(102, "param error"),
     DATABASE_ERROR(201, "databases error"),
     UNKNOWN_ERROR(999, "unknown error");
 

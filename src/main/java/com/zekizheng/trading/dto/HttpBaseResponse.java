@@ -25,6 +25,10 @@ public class HttpBaseResponse<T> {
         return message;
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public Integer getCode() {
         return code;
     }

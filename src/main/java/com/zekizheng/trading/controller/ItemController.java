@@ -7,6 +7,7 @@ import com.zekizheng.trading.entity.UserType;
 import com.zekizheng.trading.mapper.ItemDetailsMapper;
 import com.zekizheng.trading.mapper.StudentMapper;
 import com.zekizheng.trading.service.ItemService;
+import com.zekizheng.trading.status.ItemDetailsStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +38,11 @@ public class ItemController {
     public HttpBaseResponse<ItemDetails> queryOneItem(@RequestParam Integer itemId){
         HttpBaseResponse<ItemDetails> resp = new HttpBaseResponse<>();
         ItemDetails itemDetails = itemService.queryOneItem(itemId);
+        if (itemDetails == null) {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("Item Id not correct!");
+            return resp;
+        }
         itemDetails.setSellerId(studentMapper.selectById(itemDetails.getSellerId()).getStudentName());
         resp.setData(itemDetails);
         resp.setMessage(ResponseCode.SUCCESS);
@@ -75,6 +81,7 @@ public class ItemController {
         HttpBaseResponse<ItemDetails> resp = new HttpBaseResponse<>();
         String studentId = "SWE1809388";
         newOne.setSellerId(studentId);
+        newOne.setItemStatus(ItemDetailsStatus.ON_SELL);
         int row = itemService.postNewItem(newOne);
 
         if (row == 0) {
