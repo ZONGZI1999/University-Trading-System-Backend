@@ -106,8 +106,16 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderDetails deliveryOrder(OrderDetails orderDetails) {
-        return null;
+    public int updateOrder(OrderDetails orderDetails) {
+        int row;
+        try {
+            row = orderMapper.updateById(orderDetails);
+        }catch (Exception e) {
+            e.printStackTrace();
+            log.error("update order info fail");
+            return 0;
+        }
+        return row;
     }
 
     @Override

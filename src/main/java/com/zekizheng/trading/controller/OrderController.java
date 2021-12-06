@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
+
 /**
  * @author zongzi
  **/
@@ -134,6 +136,74 @@ public class OrderController {
             resp.setMessage(ResponseCode.SUCCESS);
             resp.setData(orderDetails);
             return resp;
+        }
+
+        return resp;
+    }
+
+    @PostMapping("/setDelivery")
+    public HttpBaseResponse<OrderDetails> setDeliveryInfo(@RequestBody OrderDetails orderDetails) {
+        HttpBaseResponse<OrderDetails> resp = new HttpBaseResponse<>();
+        resp.setMessage(ResponseCode.UNKNOWN_ERROR);
+
+        String userId = "SWE1809388";
+        if(orderDetails == null ||
+                orderDetails.getOrderId() == null ||
+                orderDetails.getOrderId().isEmpty()) {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("Order id is empty!");
+            return resp;
+        }
+
+        Date deliveryTime = new Date();
+        String deliveryCompany = orderDetails.getDeliveryCompany();
+        String trackingNo = orderDetails.getTrackingNo();
+
+        if(deliveryCompany == null || deliveryCompany.isEmpty()) {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("Delivery Company is empty!");
+            return resp;
+        }
+
+        if(trackingNo == null || trackingNo.isEmpty()) {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("Tracking No is empty!");
+            return resp;
+        }
+
+        orderDetails = orderService.queryDetails(orderDetails.getOrderId());
+
+        if (orderDetails == null) {
+            resp.setMessage(ResponseCode.UNKNOWN_ERROR);
+            resp.setDescription("Order details is not found!");
+            return resp;
+        }
+
+        if(!orderDetails.getBuyerId().equals(userId)) {
+            resp.setMessage(ResponseCode.UNKNOWN_ERROR);
+            resp.setDescription("You cannot to set delivery info.");
+            return resp;
+        }
+
+        if (!orderDetails.getOrderStatus().equals(OrderStatus.PAID)) {
+            resp.setMessage(ResponseCode.UNKNOWN_ERROR);
+            resp.setDescription("This order status is not correct!");
+            return resp;
+        }
+
+        orderDetails.setDeliveryTime(deliveryTime);
+        orderDetails.setTrackingNo(trackingNo);
+        orderDetails.setDeliveryCompany(deliveryCompany);
+        orderDetails.setOrderStatus(OrderStatus.ON_DELIVERY);
+
+        int row = orderService.updateOrder(orderDetails);
+
+        if(row != 1) {
+            resp.setMessage(ResponseCode.DATABASE_ERROR);
+            return resp;
+        } else {
+            resp.setMessage(ResponseCode.SUCCESS);
+            resp.setData(orderDetails);
         }
 
         return resp;

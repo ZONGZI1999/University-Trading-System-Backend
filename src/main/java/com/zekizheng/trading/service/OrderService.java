@@ -10,7 +10,7 @@ import java.util.List;
 public interface OrderService {
     int createOrder(OrderDetails orderDetails);
     int payOrder(OrderDetails orderDetails);
-    OrderDetails deliveryOrder(OrderDetails orderDetails);
+    int updateOrder(OrderDetails orderDetails);
 
     List<OrderDetails> queryAllOrder(String studentId);
     OrderDetails queryDetails(String orderId);
