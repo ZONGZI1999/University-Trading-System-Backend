@@ -1,5 +1,7 @@
 package com.zekizheng.trading.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;
 import com.zekizheng.trading.dto.HttpBaseResponse;
 import com.zekizheng.trading.dto.ResponseCode;
 import com.zekizheng.trading.entity.ItemDetails;
@@ -24,6 +26,7 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/item")
+@SaCheckLogin
 public class ItemController {
 
     @Autowired
@@ -63,7 +66,7 @@ public class ItemController {
                 resp.setMessage(ResponseCode.SUCCESS);
                 break;
             case STUDENT:
-                String studentId = "SWE1809387";
+                String studentId = StpUtil.getLoginIdAsString();
                 itemDetails = itemService.getAllItems(studentId);
                 resp.setData(itemDetails);
                 resp.setMessage(ResponseCode.SUCCESS);
@@ -80,7 +83,7 @@ public class ItemController {
     public HttpBaseResponse<ItemDetails> postNew(@RequestBody ItemDetails newOne) {
         log.info("start to post new item");
         HttpBaseResponse<ItemDetails> resp = new HttpBaseResponse<>();
-        String studentId = "SWE1809388";
+        String studentId = StpUtil.getLoginIdAsString();
         newOne.setSellerId(studentId);
         newOne.setItemStatus(ItemDetailsStatus.ON_SELL);
         int row = itemService.postNewItem(newOne);
@@ -99,6 +102,27 @@ public class ItemController {
     @PostMapping("/updateItem")
     public HttpBaseResponse<ItemDetails> update(@RequestBody ItemDetails itemDetails){
         HttpBaseResponse<ItemDetails> resp = new HttpBaseResponse<>();
+        Integer itemId = itemDetails.getItemId();
+        if(itemId == null) {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("Item Id cannot be empty");
+            return resp;
+        }
+
+        ItemDetails beforeUpdate = itemService.queryOneItem(itemId);
+        String studentId = StpUtil.getLoginIdAsString();
+        if (!beforeUpdate.getSellerId().equals(studentId)){
+            resp.setMessage(ResponseCode.UNKNOWN_ERROR);
+            resp.setDescription("You cannot modify this item details");
+            return resp;
+        }
+
+        if (beforeUpdate.getItemStatus() != ItemDetailsStatus.ON_SELL){
+            resp.setMessage(ResponseCode.INTERNAL_ERROR);
+            resp.setDescription("This item is SOLD. you cannot modify it!");
+            return resp;
+        }
+        itemDetails.setSellerId(studentId);
         int row = itemService.updateItem(itemDetails);
 
         if (row == 0) {

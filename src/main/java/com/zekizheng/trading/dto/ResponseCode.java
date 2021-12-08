@@ -8,7 +8,9 @@ public enum ResponseCode {
     USER_TYPE_ERROR(101, "user type error"),
     PARAM_ERROR(102, "param error"),
     DATABASE_ERROR(201, "databases error"),
-    UNKNOWN_ERROR(999, "unknown error");
+    UNKNOWN_ERROR(999, "unknown error"),
+    LOGIN_STATUS_ERROR(800, "You are not login currently!"),
+    INTERNAL_ERROR(301, "Internal Error");
 
 
     private final int code;

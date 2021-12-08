@@ -1,5 +1,8 @@
 package com.zekizheng.trading.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.id.SaIdUtil;
+import cn.dev33.satoken.stp.StpUtil;
 import com.zekizheng.trading.dto.HttpBaseResponse;
 import com.zekizheng.trading.dto.ResponseCode;
 import com.zekizheng.trading.entity.ItemDetails;
@@ -25,6 +28,7 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/order")
+@SaCheckLogin
 public class OrderController {
 
     @Autowired
@@ -39,7 +43,7 @@ public class OrderController {
     @PostMapping("/createOrder")
     public HttpBaseResponse<OrderDetails> createOrder(@RequestBody OrderDetails orderDetails){
         HttpBaseResponse<OrderDetails> resp = new HttpBaseResponse<>();
-        String buyerId = "SWE1809388";
+        String buyerId = StpUtil.getLoginIdAsString();
         Integer itemId = orderDetails.getItemId();
         ItemDetails itemDetails = itemService.queryOneItem(itemId);
         if (itemDetails == null) {
@@ -91,7 +95,7 @@ public class OrderController {
     public HttpBaseResponse<OrderDetails> payOrder(@RequestBody OrderDetails orderDetails) {
         HttpBaseResponse<OrderDetails> resp = new HttpBaseResponse<>();
         resp.setMessage(ResponseCode.UNKNOWN_ERROR);
-        String buyerId = "SWE1809388";
+        String buyerId = StpUtil.getLoginIdAsString();
         if (orderDetails == null ||
                 orderDetails.getOrderId()== null ||
                 orderDetails.getOrderId().isEmpty()) {
@@ -148,7 +152,7 @@ public class OrderController {
         HttpBaseResponse<OrderDetails> resp = new HttpBaseResponse<>();
         resp.setMessage(ResponseCode.UNKNOWN_ERROR);
 
-        String userId = "SWE1809387";
+        String userId = StpUtil.getLoginIdAsString();;
         if(orderDetails == null ||
                 orderDetails.getOrderId() == null ||
                 orderDetails.getOrderId().isEmpty()) {
@@ -212,7 +216,14 @@ public class OrderController {
                 orderDetails.setOrderStatus(OrderStatus.ON_RECEIVED);
 
                 row = orderService.updateOrder(orderDetails);
-
+                Integer itemId = orderDetails.getItemId();
+                ItemDetails itemDetails = itemService.queryOneItem(itemId);
+                Integer cost = itemDetails.getItemPrice();
+                boolean isSuccess = balanceService.pay(balanceService.getUserBalance(orderDetails.getSellerId()),
+                        -cost);
+                if (!isSuccess) {
+                    log.error("update seller balance fail");
+                }
                 if(row != 1) {
                     resp.setMessage(ResponseCode.DATABASE_ERROR);
                 } else {
@@ -281,25 +292,34 @@ public class OrderController {
             resp.setDescription("student id is empty");
             return resp;
         }
-        if (as.equals("buyer")) {
-            List<OrderDetails> res = orderService.queryAllOrderAsBuyer(studentId);
-            resp.setMessage(ResponseCode.SUCCESS);
-            resp.setData(res);
+        if (studentId.equals(StpUtil.getLoginIdAsString())) {
+            resp.setMessage(ResponseCode.UNKNOWN_ERROR);
+            resp.setDescription("Your param student id is not match with your token!");
             return resp;
-        } else if (as.equals("seller")) {
-            List<OrderDetails> res = orderService.queryAllOrderAsSeller(studentId);
-            resp.setMessage(ResponseCode.SUCCESS);
-            resp.setData(res);
-            return resp;
-        } else if (as.equals("all")){
-            List<OrderDetails> res = orderService.queryAllOrder(studentId);
-            resp.setMessage(ResponseCode.SUCCESS);
-            resp.setData(res);
-            return resp;
-        } else {
-            resp.setMessage(ResponseCode.PARAM_ERROR);
-            resp.setDescription("param error");
-            return resp;
+        }
+        switch (as) {
+            case "buyer": {
+                List<OrderDetails> res = orderService.queryAllOrderAsBuyer(studentId);
+                resp.setMessage(ResponseCode.SUCCESS);
+                resp.setData(res);
+                return resp;
+            }
+            case "seller": {
+                List<OrderDetails> res = orderService.queryAllOrderAsSeller(studentId);
+                resp.setMessage(ResponseCode.SUCCESS);
+                resp.setData(res);
+                return resp;
+            }
+            case "all": {
+                List<OrderDetails> res = orderService.queryAllOrder(studentId);
+                resp.setMessage(ResponseCode.SUCCESS);
+                resp.setData(res);
+                return resp;
+            }
+            default:
+                resp.setMessage(ResponseCode.PARAM_ERROR);
+                resp.setDescription("param error");
+                return resp;
         }
     }
 
@@ -307,7 +327,7 @@ public class OrderController {
     public HttpBaseResponse<OrderDetails> queryOrderDetails(@RequestParam String orderId) {
         HttpBaseResponse<OrderDetails> resp = new HttpBaseResponse<>();
 
-        String userId = "SWE1809388";
+        String userId = StpUtil.getLoginIdAsString();
 
         OrderDetails orderDetails = orderService.queryDetails(orderId);
         if(orderDetails == null) {
@@ -329,13 +349,24 @@ public class OrderController {
     }
 
     @GetMapping("/queryOrderByItemId")
-    public HttpBaseResponse<OrderDetails> queryOrderDetailsByItemId(@RequestParam String itemId){
+    public HttpBaseResponse<OrderDetails> queryOrderDetailsByItemId(@RequestParam Integer itemId){
         //todo 鉴权
         HttpBaseResponse<OrderDetails> resp = new HttpBaseResponse<>();
+        String studentId = StpUtil.getLoginIdAsString();
+        if (itemId == null) {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("Item id is empty");
+            return resp;
+        }
         OrderDetails orderDetails = orderService.queryDetailsByItemId(itemId);
         if(orderDetails == null) {
             resp.setMessage(ResponseCode.PARAM_ERROR);
             resp.setDescription("Item Id is not correct");
+            return resp;
+        }
+        if (!orderDetails.getSellerId().equals(studentId) && !orderDetails.getBuyerId().equals(studentId)) {
+            resp.setMessage(ResponseCode.UNKNOWN_ERROR);
+            resp.setDescription("You are not allowed to get this order info");
             return resp;
         }
         resp.setMessage(ResponseCode.SUCCESS);

@@ -158,7 +158,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderDetails queryDetailsByItemId(String itemId) {
+    public OrderDetails queryDetailsByItemId(Integer itemId) {
         QueryWrapper<OrderDetails> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("item_id", itemId);
         OrderDetails orderDetails = orderMapper.selectList(queryWrapper).get(0);
