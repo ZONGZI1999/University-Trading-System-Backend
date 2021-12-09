@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -206,7 +207,7 @@ public class OrderController {
                     resp.setMessage(ResponseCode.SUCCESS);
                     resp.setData(orderDetails);
                 }
-                return resp;
+                break;
             case ON_DELIVERY:
                 if(!orderDetails.getBuyerId().equals(userId)) {
                     resp.setMessage(ResponseCode.UNKNOWN_ERROR);
@@ -230,7 +231,7 @@ public class OrderController {
                     resp.setMessage(ResponseCode.SUCCESS);
                     resp.setData(orderDetails);
                 }
-                return resp;
+                break;
             case ON_RECEIVED:
                 //try to set buyer evaluation
                 if(orderDetails.getBuyerId().equals(userId)) {
@@ -274,12 +275,19 @@ public class OrderController {
                     return resp;
                 }
                 resp.setMessage(ResponseCode.SUCCESS);
-                return resp;
+                resp.setData(orderDetails);
+                break;
             default:
                 resp.setMessage(ResponseCode.UNKNOWN_ERROR);
                 resp.setDescription("In this status, you cannot operate it.");
                 return resp;
         }
+        if (userId.equals(orderDetails.getBuyerId()) && !orderDetails.getOrderStatus().equals(OrderStatus.FINISH)) {
+            orderDetails.setSellerEvaluation(null);
+        } else if (userId.equals(orderDetails.getSellerId()) && !orderDetails.getOrderStatus().equals(OrderStatus.FINISH)) {
+            orderDetails.setBuyerEvaluation(null);
+        }
+        return resp;
     }
 
     @GetMapping("/queryOrderList/{as}")
@@ -287,40 +295,50 @@ public class OrderController {
                                                                @RequestParam String studentId) {
         //todo: 鉴权
         HttpBaseResponse<List<OrderDetails>> resp = new HttpBaseResponse<>();
-        if (studentId == null) {
-            resp.setMessage(ResponseCode.PARAM_ERROR);
-            resp.setDescription("student id is empty");
-            return resp;
-        }
-        if (studentId.equals(StpUtil.getLoginIdAsString())) {
-            resp.setMessage(ResponseCode.UNKNOWN_ERROR);
-            resp.setDescription("Your param student id is not match with your token!");
-            return resp;
-        }
+        studentId = StpUtil.getLoginIdAsString();
+//        if (studentId == null) {
+//            resp.setMessage(ResponseCode.PARAM_ERROR);
+//            resp.setDescription("student id is empty");
+//            return resp;
+//        }
+//        if (!studentId.equals(StpUtil.getLoginIdAsString())) {
+//            resp.setMessage(ResponseCode.UNKNOWN_ERROR);
+//            resp.setDescription("Your param student id is not match with your token!");
+//            return resp;
+//        }
+        List<OrderDetails> res = new ArrayList<>();
         switch (as) {
             case "buyer": {
-                List<OrderDetails> res = orderService.queryAllOrderAsBuyer(studentId);
+                res = orderService.queryAllOrderAsBuyer(studentId);
                 resp.setMessage(ResponseCode.SUCCESS);
                 resp.setData(res);
-                return resp;
+                break;
             }
             case "seller": {
-                List<OrderDetails> res = orderService.queryAllOrderAsSeller(studentId);
+                res = orderService.queryAllOrderAsSeller(studentId);
                 resp.setMessage(ResponseCode.SUCCESS);
                 resp.setData(res);
-                return resp;
+                break;
             }
             case "all": {
-                List<OrderDetails> res = orderService.queryAllOrder(studentId);
+                res = orderService.queryAllOrder(studentId);
                 resp.setMessage(ResponseCode.SUCCESS);
                 resp.setData(res);
-                return resp;
+                break;
             }
             default:
                 resp.setMessage(ResponseCode.PARAM_ERROR);
                 resp.setDescription("param error");
                 return resp;
         }
+        for (OrderDetails orderDetails: res) {
+            if (studentId.equals(orderDetails.getBuyerId()) && !orderDetails.getOrderStatus().equals(OrderStatus.FINISH)) {
+                orderDetails.setSellerEvaluation(null);
+            } else if (studentId.equals(orderDetails.getSellerId()) && !orderDetails.getOrderStatus().equals(OrderStatus.FINISH)) {
+                orderDetails.setBuyerEvaluation(null);
+            }
+        }
+        return resp;
     }
 
     @GetMapping("/queryOrder")
@@ -336,13 +354,18 @@ public class OrderController {
             resp.setDescription("order id is not exist");
             return resp;
         }
-        if (!orderDetails.getBuyerId().equals(userId) && orderDetails.getSellerId().equals(userId)) {
+        if (!orderDetails.getBuyerId().equals(userId) && !orderDetails.getSellerId().equals(userId)) {
             log.error("this order is not belong to you");
             resp.setMessage(ResponseCode.UNKNOWN_ERROR);
             resp.setDescription("this order is not belong to you");
             return resp;
         }
         resp.setMessage(ResponseCode.SUCCESS);
+        if (userId.equals(orderDetails.getBuyerId()) && !orderDetails.getOrderStatus().equals(OrderStatus.FINISH)) {
+            orderDetails.setSellerEvaluation(null);
+        } else if (userId.equals(orderDetails.getSellerId()) && !orderDetails.getOrderStatus().equals(OrderStatus.FINISH)) {
+            orderDetails.setBuyerEvaluation(null);
+        }
         resp.setData(orderDetails);
 
         return resp;
@@ -370,6 +393,11 @@ public class OrderController {
             return resp;
         }
         resp.setMessage(ResponseCode.SUCCESS);
+        if (studentId.equals(orderDetails.getBuyerId()) && !orderDetails.getOrderStatus().equals(OrderStatus.FINISH)) {
+            orderDetails.setSellerEvaluation(null);
+        }else if (studentId.equals(orderDetails.getSellerId()) && !orderDetails.getOrderStatus().equals(OrderStatus.FINISH)) {
+            orderDetails.setBuyerEvaluation(null);
+        }
         resp.setData(orderDetails);
         return resp;
     }

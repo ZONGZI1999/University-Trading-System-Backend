@@ -28,15 +28,15 @@ public class DeliveryInfoController {
     private DeliveryInfoMapper mapper;
 
     @GetMapping("/getDeliveryInfoList")
-    public HttpBaseResponse<List<DeliveryInfo>> getDeliveryInfoList(@RequestParam String studentId) {
+    public HttpBaseResponse<List<DeliveryInfo>> getDeliveryInfoList() {
         HttpBaseResponse<List<DeliveryInfo>> resp = new HttpBaseResponse<>();
         List<DeliveryInfo> deliveryInfoList = null;
-        String userId = StpUtil.getLoginIdAsString();
-        if (userId.equals(studentId)){
-            resp.setMessage(ResponseCode.UNKNOWN_ERROR);
-            resp.setDescription("You are not allowed to query this student id delivery address.");
-            return resp;
-        }
+        String studentId = StpUtil.getLoginIdAsString();
+//        if (!userId.equals(studentId)){
+//            resp.setMessage(ResponseCode.UNKNOWN_ERROR);
+//            resp.setDescription("You are not allowed to query this student id delivery address.");
+//            return resp;
+//        }
         try {
             deliveryInfoList
                     = mapper.selectList(new QueryWrapper<DeliveryInfo>().eq("student_id", studentId));
