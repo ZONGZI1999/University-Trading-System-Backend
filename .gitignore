@@ -5,6 +5,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 log
+image
 
 ### STS ###
 .apt_generated
@@ -34,3 +35,4 @@ build/
 
 ### VS Code ###
 .vscode/
+/image/
