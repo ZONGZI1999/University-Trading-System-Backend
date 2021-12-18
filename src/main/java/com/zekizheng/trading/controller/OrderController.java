@@ -401,4 +401,67 @@ public class OrderController {
         resp.setData(orderDetails);
         return resp;
     }
+
+    @PostMapping("/closeOrder")
+    public HttpBaseResponse<OrderDetails> closeOrder(@RequestBody OrderDetails orderDetails) {
+        HttpBaseResponse<OrderDetails> resp = new HttpBaseResponse<>();
+
+        String orderId = orderDetails.getOrderId();
+
+        if (orderId == null) {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("Order Id is empty!");
+            return resp;
+        }
+
+        String studentId = StpUtil.getLoginIdAsString();
+
+        OrderDetails res = orderService.queryDetails(orderId);
+
+        if (res == null) {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("Order Id is wrong.");
+            return resp;
+        }
+
+        if (!res.getBuyerId().equals(studentId) && !res.getSellerId().equals(studentId)){
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("Unauthorized close order!");
+            return resp;
+        }
+
+        if (res.getOrderStatus().equals(OrderStatus.CREATED)){
+            //created
+            res.setOrderStatus(OrderStatus.CLOSED);
+            int row = orderService.updateOrder(res);
+             if (row == 1) {
+                 resp.setMessage(ResponseCode.SUCCESS);
+                 resp.setData(res);
+             } else {
+                 resp.setMessage(ResponseCode.DATABASE_ERROR);
+             }
+            return resp;
+        }
+
+        if (res.getOrderStatus().equals(OrderStatus.PAID)) {
+            //seller refund
+            res.setOrderStatus(OrderStatus.HAS_REFUND);
+            int row = orderService.updateOrder(res);
+            int itemId = res.getItemId();
+            ItemDetails itemDetails = itemService.queryOneItem(itemId);
+            int price = itemDetails.getItemPrice();
+            UserBalance userBalance = balanceService.getUserBalance(res.getBuyerId());
+            boolean isSuccess = balanceService.pay(userBalance, -price);
+            if (isSuccess && row == 1) {
+                resp.setMessage(ResponseCode.SUCCESS);
+                resp.setData(res);
+            } else {
+                resp.setMessage(ResponseCode.DATABASE_ERROR);
+            }
+            return resp;
+        }
+
+        resp.setMessage(ResponseCode.UNKNOWN_ERROR);
+        return resp;
+    }
 }

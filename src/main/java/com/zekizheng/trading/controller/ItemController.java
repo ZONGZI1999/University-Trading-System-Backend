@@ -2,6 +2,7 @@ package com.zekizheng.trading.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.zekizheng.trading.dto.HttpBaseResponse;
 import com.zekizheng.trading.dto.ResponseCode;
 import com.zekizheng.trading.entity.ItemDetails;
@@ -47,7 +48,6 @@ public class ItemController {
             resp.setDescription("Item Id not correct!");
             return resp;
         }
-        itemDetails.setSellerId(studentMapper.selectById(itemDetails.getSellerId()).getStudentName());
         resp.setData(itemDetails);
         resp.setMessage(ResponseCode.SUCCESS);
         return resp;
@@ -110,6 +110,13 @@ public class ItemController {
         }
 
         ItemDetails beforeUpdate = itemService.queryOneItem(itemId);
+
+        if(beforeUpdate == null) {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("Item Id error! Cannot find any item.");
+            return resp;
+        }
+
         String studentId = StpUtil.getLoginIdAsString();
         if (!beforeUpdate.getSellerId().equals(studentId)){
             resp.setMessage(ResponseCode.UNKNOWN_ERROR);
@@ -132,6 +139,20 @@ public class ItemController {
         }
         resp.setMessage(ResponseCode.SUCCESS);
         resp.setData(itemDetails);
+        return resp;
+    }
+
+    @GetMapping("/searchItems")
+    public HttpBaseResponse<List<ItemDetails>> searchItem(@RequestParam(required = false) String keywords){
+        HttpBaseResponse<List<ItemDetails>> resp = new HttpBaseResponse<>();
+        QueryWrapper<ItemDetails> wrapper = new QueryWrapper<>();
+        if (keywords == null) {
+            keywords = "";
+        }
+        wrapper.like("item_title", "%" + keywords + "%");
+        List<ItemDetails> res = itemMapper.selectList(wrapper);
+        resp.setData(res);
+        resp.setMessage(ResponseCode.SUCCESS);
         return resp;
     }
 }

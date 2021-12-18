@@ -27,11 +27,11 @@ import javax.servlet.http.HttpServletResponse;
  **/
 @CrossOrigin(origins = "*")
 @Controller
-@SaCheckLogin
 public class UploadController {
 
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
     @ResponseBody
+    @SaCheckLogin
     public Object upload(String name, @RequestParam(value = "multipartFile") MultipartFile multipartFile)
             throws IllegalStateException, IOException {
         Map<String, Object> map = new HashMap<>();

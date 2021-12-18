@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -32,4 +33,5 @@ public class ItemDetails implements Serializable {
     private List<String> itemImage;
     @TableField(typeHandler = GsonTypeHandler.class)
     private ItemDetailsStatus itemStatus;
+    private Date createTime;
 }

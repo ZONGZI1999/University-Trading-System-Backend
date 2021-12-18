@@ -10,7 +10,7 @@ public enum OrderStatus {
     ON_RECEIVED(3),
     FINISH(4),
     APPLYING_REFUND(5),
-    REFUNDING(6),
+    HAS_REFUND(6),
     CLOSED(7);
 
 
