@@ -86,6 +86,29 @@ public class ItemController {
         String studentId = StpUtil.getLoginIdAsString();
         newOne.setSellerId(studentId);
         newOne.setItemStatus(ItemDetailsStatus.ON_SELL);
+        if (newOne.getItemImage() == null || newOne.getItemImage().size() == 0) {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("Image list is empty! Please upload images.");
+            return resp;
+        }
+
+        if (newOne.getItemPrice() == null || newOne.getItemPrice() == 0) {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("Price shouldn't be 0!");
+            return resp;
+        }
+
+        if (newOne.getItemTitle() == null || newOne.getItemTitle().equals("")) {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("Title cannot be empty!");
+            return resp;
+        }
+
+        if (newOne.getItemDescription() == null || newOne.getItemDescription().size() == 0) {
+            resp.setMessage(ResponseCode.PARAM_ERROR);
+            resp.setDescription("Item description cannot be empty!");
+            return resp;
+        }
         int row = itemService.postNewItem(newOne);
 
         if (row == 0) {
